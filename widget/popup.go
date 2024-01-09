@@ -278,7 +278,6 @@ func withRelativePosition(rel fyne.Position, to fyne.CanvasObject, f func(positi
 	d := fyne.CurrentApp().Driver()
 	c := d.CanvasForObject(to)
 	if c == nil {
-		fyne.LogError("Could not locate parent object to display relative to", nil)
 		f(rel)
 		return
 	}
