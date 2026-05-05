@@ -25,7 +25,7 @@ func (d *FormDialog) Submit() {
 		return
 	}
 
-	d.hideWithResponse(true)
+	d.hideWithResponse(true, false)
 }
 
 // setSubmitState is intended to run when the form validation changes to
@@ -57,7 +57,7 @@ func NewForm(title, confirm, dismiss string, items []*widget.FormItem, callback 
 	}
 	confirmBtn := &widget.Button{
 		Text: confirm, Icon: theme.ConfirmIcon(), Importance: widget.HighImportance,
-		OnTapped: func() { d.hideWithResponse(true) },
+		OnTapped: func() { d.hideWithResponse(true, false) },
 	}
 	formDialog := &FormDialog{
 		dialog:  d,

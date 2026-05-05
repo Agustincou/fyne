@@ -8,6 +8,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	internalwidget "fyne.io/fyne/v2/internal/widget"
 	"fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -87,6 +88,30 @@ func TestCustom_ResizeOnShow(t *testing.T) {
 	d.Show()
 	assert.Equal(t, size, w.Canvas().Overlays().Top().Size())
 	d.Hide()
+}
+
+func TestCustom_HideOnly_Stacked(t *testing.T) {
+	w := test.NewTempWindow(t, canvas.NewRectangle(color.Transparent))
+
+	d1 := NewCustom("First", "OK", widget.NewLabel("One"), w)
+	d2 := NewCustom("Second", "OK", widget.NewLabel("Two"), w)
+
+	contents := func() []fyne.CanvasObject {
+		var objs []fyne.CanvasObject
+		for _, o := range w.Canvas().Overlays().List() {
+			objs = append(objs, o.(*internalwidget.OverlayContainer).Content)
+		}
+		return objs
+	}
+
+	d1.Show()
+	d2.Show()
+	assert.Equal(t, []fyne.CanvasObject{d1.dialog.win, d2.dialog.win}, contents())
+
+	d1.HideOnly()
+	assert.True(t, d1.dialog.win.Hidden)
+	assert.False(t, d2.dialog.win.Hidden)
+	assert.Equal(t, []fyne.CanvasObject{d2.dialog.win}, contents())
 }
 
 func TestConfirm_SetButtons(t *testing.T) {
