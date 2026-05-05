@@ -309,6 +309,41 @@ func TestPopUp_Stacked(t *testing.T) {
 	assert.Empty(t, test.Canvas().Overlays().List())
 }
 
+func TestPopUp_HideOnly_Stacked(t *testing.T) {
+	c := test.NewCanvas()
+	assert.Nil(t, c.Overlays().Top())
+	assert.Empty(t, c.Overlays().List())
+
+	pop1 := NewPopUp(NewLabel("Hi"), c)
+	pop1.Show()
+	pop2 := NewPopUp(NewLabel("Hi"), c)
+	pop2.Show()
+	pop3 := NewPopUp(NewLabel("Hi"), c)
+	pop3.Show()
+
+	contents := func() []fyne.CanvasObject {
+		var objs []fyne.CanvasObject
+		for _, o := range c.Overlays().List() {
+			objs = append(objs, o.(*widget.OverlayContainer).Content)
+		}
+		return objs
+	}
+	assert.Equal(t, []fyne.CanvasObject{pop1, pop2, pop3}, contents())
+
+	// unlike Hide, HideOnly does not cut the stack above the pop-up
+	pop1.HideOnly()
+	assert.False(t, pop1.Visible())
+	assert.True(t, pop2.Visible())
+	assert.True(t, pop3.Visible())
+	assert.Equal(t, []fyne.CanvasObject{pop2, pop3}, contents())
+	assert.Equal(t, pop3, c.Overlays().Top().(*widget.OverlayContainer).Content)
+
+	// and the pop-up can be shown again afterwards
+	pop1.Show()
+	assert.True(t, pop1.Visible())
+	assert.Equal(t, []fyne.CanvasObject{pop2, pop3, pop1}, contents())
+}
+
 func TestPopUp_Layout(t *testing.T) {
 	win := test.NewWindow(NewLabel("OK"))
 	defer win.Close()

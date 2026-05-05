@@ -8,6 +8,8 @@ type OverlayStack interface {
 	List() []CanvasObject
 	// Remove removes the given object and all objects above it from the overlay stack.
 	Remove(overlay CanvasObject)
+	// RemoveOnly removes only the given object from the overlay stack.
+	RemoveOnly(overlay CanvasObject)
 	// Top returns the top-most object of the overlay stack.
 	Top() CanvasObject
 }

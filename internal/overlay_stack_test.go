@@ -84,9 +84,39 @@ func TestOverlayStack(t *testing.T) {
 	assert.Equal(t, o1, s.Top())
 	assert.Equal(t, fm1, s.TopFocusManager())
 	assert.Equal(t, []*app.FocusManager{fm1}, s.ListFocusManagers())
+
 	s.Remove(o1)
 	assert.Empty(t, s.List())
 	assert.Nil(t, s.Top())
 	assert.Nil(t, s.TopFocusManager())
 	assert.Empty(t, s.ListFocusManagers())
+}
+
+func TestOverlayStack_RemoveOnly(t *testing.T) {
+	s := &internal.OverlayStack{Canvas: test.NewCanvas()}
+	o1 := widget.NewLabel("A")
+	o2 := widget.NewLabel("B")
+	o3 := widget.NewLabel("C")
+
+	s.Add(o1)
+	fm1 := s.TopFocusManager()
+	s.Add(o2)
+	fm2 := s.TopFocusManager()
+	s.Add(o3)
+	fm3 := s.TopFocusManager()
+
+	assert.Equal(t, []fyne.CanvasObject{o1, o2, o3}, s.List())
+	assert.Equal(t, []*app.FocusManager{fm1, fm2, fm3}, s.ListFocusManagers())
+
+	s.RemoveOnly(o2)
+	assert.Equal(t, []fyne.CanvasObject{o1, o3}, s.List())
+	assert.Equal(t, o3, s.Top())
+	assert.Equal(t, fm3, s.TopFocusManager())
+	assert.Equal(t, []*app.FocusManager{fm1, fm3}, s.ListFocusManagers())
+
+	s.RemoveOnly(o3)
+	assert.Equal(t, []fyne.CanvasObject{o1}, s.List())
+	assert.Equal(t, o1, s.Top())
+	assert.Equal(t, fm1, s.TopFocusManager())
+	assert.Equal(t, []*app.FocusManager{fm1}, s.ListFocusManagers())
 }

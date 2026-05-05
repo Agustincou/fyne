@@ -35,6 +35,18 @@ func (p *PopUp) Hide() {
 	p.Move(fyne.Position{}) // reset so that Show or ShowAtPosition next time is respected
 }
 
+// HideOnly hides this popup and removes only its overlay from the overlay
+// stack, leaving any overlays above it in place (Hide removes those too).
+func (p *PopUp) HideOnly() {
+	if p.overlay != nil {
+		p.Canvas.Overlays().RemoveOnly(p.overlay)
+		p.overlay = nil
+	}
+
+	p.BaseWidget.Hide()
+	p.Move(fyne.Position{}) // reset so that Show or ShowAtPosition next time is respected
+}
+
 // Refresh the background for a modal popup and the content of this popup.
 func (p *PopUp) Refresh() {
 	if p.modal && p.overlay != nil {
