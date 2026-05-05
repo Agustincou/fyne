@@ -64,3 +64,32 @@ func TestOverlayStack(t *testing.T) {
 	assert.Zero(t, len(stack.List()))
 	assert.Zero(t, len(stack.renderCaches))
 }
+
+func TestOverlayStack_RemoveOnly(t *testing.T) {
+	stack := overlayStack{}
+
+	obj1 := &fyne.Container{Layout: layout.NewCenterLayout()}
+	obj2 := &fyne.Container{Layout: layout.NewFormLayout()}
+	obj3 := &fyne.Container{Layout: layout.NewHBoxLayout()}
+
+	stack.Add(obj1)
+	stack.Add(obj2)
+	stack.Add(obj3)
+
+	assert.Equal(t, []fyne.CanvasObject{obj1, obj2, obj3}, stack.List())
+	assert.Equal(t, 3, len(stack.renderCaches))
+	assert.Equal(t, obj1, stack.renderCaches[0].root.obj)
+	assert.Equal(t, obj2, stack.renderCaches[1].root.obj)
+	assert.Equal(t, obj3, stack.renderCaches[2].root.obj)
+
+	stack.RemoveOnly(obj2)
+	assert.Equal(t, []fyne.CanvasObject{obj1, obj3}, stack.List())
+	assert.Equal(t, 2, len(stack.renderCaches))
+	assert.Equal(t, obj1, stack.renderCaches[0].root.obj)
+	assert.Equal(t, obj3, stack.renderCaches[1].root.obj)
+
+	stack.RemoveOnly(obj1)
+	assert.Equal(t, []fyne.CanvasObject{obj3}, stack.List())
+	assert.Equal(t, 1, len(stack.renderCaches))
+	assert.Equal(t, obj3, stack.renderCaches[0].root.obj)
+}

@@ -42,6 +42,15 @@ func (o *OverlayContainer) Hide() {
 	o.Base.Hide()
 }
 
+// HideOnly hides the overlay container and removes only it from the overlay stack.
+func (o *OverlayContainer) HideOnly() {
+	if o.shown {
+		o.canvas.Overlays().RemoveOnly(o)
+		o.shown = false
+	}
+	o.Base.Hide()
+}
+
 // MouseIn catches mouse-in events not handled by the container’s content. It does nothing.
 func (o *OverlayContainer) MouseIn(*desktop.MouseEvent) {
 }

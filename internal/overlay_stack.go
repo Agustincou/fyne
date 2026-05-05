@@ -7,7 +7,7 @@ import (
 )
 
 // OverlayStack allows stacking overlays on top of each other.
-// Removing an overlay will also remove all overlays above it.
+// Removing an overlay also removes all overlays above it.
 type OverlayStack struct {
 	OnChange      func()
 	Canvas        fyne.Canvas
@@ -64,13 +64,46 @@ func (s *OverlayStack) Remove(overlay fyne.CanvasObject) {
 	if overlayIdx == -1 {
 		return
 	}
-	// set removed elements in backing array to nil to release memory references
+
+	// set removed elements in backing arrays to nil to release memory references
 	for i := overlayIdx; i < len(s.overlays); i++ {
 		s.overlays[i] = nil
 		s.focusManagers[i] = nil
 	}
+
 	s.overlays = s.overlays[:overlayIdx]
 	s.focusManagers = s.focusManagers[:overlayIdx]
+}
+
+// RemoveOnly deletes only a specific overlay from the stack.
+func (s *OverlayStack) RemoveOnly(overlay fyne.CanvasObject) {
+	if s.OnChange != nil {
+		defer s.OnChange()
+	}
+
+	overlayIdx := -1
+	for i, o := range s.overlays {
+		if o == overlay {
+			overlayIdx = i
+			break
+		}
+	}
+	if overlayIdx == -1 {
+		return
+	}
+
+	lastIdx := len(s.overlays) - 1
+
+	// shift down overlays above the removed index
+	copy(s.overlays[overlayIdx:], s.overlays[overlayIdx+1:])
+	copy(s.focusManagers[overlayIdx:], s.focusManagers[overlayIdx+1:])
+
+	// set removed elements in backing arrays to nil to release memory references
+	s.overlays[lastIdx] = nil
+	s.focusManagers[lastIdx] = nil
+
+	s.overlays = s.overlays[:lastIdx]
+	s.focusManagers = s.focusManagers[:lastIdx]
 }
 
 // Top returns the top-most overlay of the stack.

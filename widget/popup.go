@@ -33,6 +33,15 @@ func (p *PopUp) Hide() {
 	p.BaseWidget.Hide()
 }
 
+// HideOnly hides this popup and removes only it from the overlay stack.
+func (p *PopUp) HideOnly() {
+	if p.overlayShown {
+		p.Canvas.Overlays().RemoveOnly(p)
+		p.overlayShown = false
+	}
+	p.BaseWidget.Hide()
+}
+
 // Move the widget to a new position. A PopUp position is absolute to the top, left of its canvas.
 // For PopUp this actually moves the content so checking Position() will not return the same value as is set here.
 func (p *PopUp) Move(pos fyne.Position) {

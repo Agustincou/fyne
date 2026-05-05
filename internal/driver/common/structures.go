@@ -93,3 +93,27 @@ func (o *overlayStack) Remove(overlay fyne.CanvasObject) {
 
 	o.renderCaches = o.renderCaches[:overlayCount]
 }
+
+func (o *overlayStack) RemoveOnly(overlay fyne.CanvasObject) {
+	if overlay == nil || len(o.List()) == 0 {
+		return
+	}
+
+	overlayIdx := -1
+	for i, candidate := range o.List() {
+		if candidate == overlay {
+			overlayIdx = i
+			break
+		}
+	}
+	if overlayIdx == -1 {
+		return
+	}
+
+	o.OverlayStack.RemoveOnly(overlay)
+
+	lastIdx := len(o.renderCaches) - 1
+	copy(o.renderCaches[overlayIdx:], o.renderCaches[overlayIdx+1:])
+	o.renderCaches[lastIdx] = nil // release memory reference to removed element
+	o.renderCaches = o.renderCaches[:lastIdx]
+}
