@@ -88,7 +88,7 @@ func NewCustomConfirm(title, confirm, dismiss string, content fyne.CanvasObject,
 	ok := &widget.Button{
 		Text: confirm, Icon: theme.ConfirmIcon(), Importance: widget.HighImportance,
 		OnTapped: func() {
-			d.hideWithResponse(true)
+			d.hideWithResponse(true, false)
 		},
 	}
 	d.create(container.NewGridWithColumns(2, d.dismiss, ok))

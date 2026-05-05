@@ -767,6 +767,17 @@ func (f *FileDialog) Hide() {
 	}
 }
 
+// HideOnly hides only the file dialog overlay.
+func (f *FileDialog) HideOnly() {
+	if f.dialog == nil {
+		return
+	}
+	f.dialog.win.HideOnly()
+	if f.onClosedCallback != nil {
+		f.onClosedCallback(false)
+	}
+}
+
 // SetConfirmText allows custom text to be set in the confirmation button
 //
 // Since: 2.2

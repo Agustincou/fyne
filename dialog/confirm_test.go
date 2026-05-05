@@ -73,6 +73,18 @@ func TestDialog_ConfirmCallbackOnlyOnConfirm(t *testing.T) {
 	assert.True(t, cnf.win.Hidden)
 }
 
+func TestDialog_ConfirmHideOnlyCallback(t *testing.T) {
+	ch := make(chan bool, 1)
+	cnf := NewConfirm("Test", "Test", func(ok bool) {
+		ch <- ok
+	}, test.NewTempWindow(t, nil))
+	cnf.Show()
+
+	cnf.HideOnly()
+	assert.Equal(t, false, <-ch)
+	assert.True(t, cnf.win.Hidden)
+}
+
 func TestConfirmDialog_Resize(t *testing.T) {
 	window := test.NewWindow(nil)
 	defer window.Close()

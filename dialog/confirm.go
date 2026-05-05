@@ -19,7 +19,7 @@ type ConfirmDialog struct {
 //
 // Since: 2.6
 func (d *ConfirmDialog) Confirm() {
-	d.hideWithResponse(true)
+	d.hideWithResponse(true, false)
 }
 
 // SetConfirmText allows custom text to be set in the confirmation button
@@ -49,7 +49,7 @@ func NewConfirm(title, message string, callback func(bool), parent fyne.Window) 
 	confirm := &widget.Button{
 		Text: lang.L("Yes"), Icon: theme.ConfirmIcon(), Importance: widget.HighImportance,
 		OnTapped: func() {
-			d.hideWithResponse(true)
+			d.hideWithResponse(true, false)
 		},
 	}
 	d.create(container.NewGridWithColumns(2, d.dismiss, confirm))

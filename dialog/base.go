@@ -22,6 +22,7 @@ const (
 type Dialog interface {
 	Show()
 	Hide()
+	HideOnly()
 	SetDismissText(label string)
 	SetOnClosed(closed func())
 	Refresh()
@@ -61,7 +62,11 @@ func (d *dialog) Dismiss() {
 }
 
 func (d *dialog) Hide() {
-	d.hideWithResponse(false)
+	d.hideWithResponse(false, false)
+}
+
+func (d *dialog) HideOnly() {
+	d.hideWithResponse(false, true)
 }
 
 // MinSize returns the size that this dialog should not shrink below.
@@ -118,8 +123,12 @@ func (d *dialog) SetOnClosed(closed func()) {
 	}
 }
 
-func (d *dialog) hideWithResponse(resp bool) {
-	d.win.Hide()
+func (d *dialog) hideWithResponse(resp bool, hideOnly bool) {
+	if hideOnly {
+		d.win.HideOnly()
+	} else {
+		d.win.Hide()
+	}
 	if d.callback != nil {
 		d.callback(resp)
 	}
