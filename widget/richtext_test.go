@@ -423,7 +423,8 @@ func TestText_DeleteFromTo_Segments(t *testing.T) {
 func TestText_Multiline(t *testing.T) {
 	text := NewRichText(
 		&TextSegment{Text: "line1\nli", Style: RichTextStyleStrong},
-		&TextSegment{Text: "ne2\nline3", Style: RichTextStyleInline})
+		&TextSegment{Text: "ne2\nline3", Style: RichTextStyleInline},
+	)
 
 	w := test.NewTempWindow(t, text)
 	w.Resize(fyne.NewSize(64, 90))
@@ -1156,6 +1157,17 @@ func TestText_lineBounds_variable_char_width(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestText_lineBounds_small_firstWidth(t *testing.T) {
+	measurer := func(text []rune) fyne.Size {
+		return fyne.MeasureText(string(text), 14, fyne.TextStyle{})
+	}
+	got, _ := lineBounds(&TextSegment{Text: "foobar"}, fyne.TextWrapWord, fyne.TextTruncateOff, 0.1, fyne.NewSize(64, 20), measurer)
+	assert.Equal(t, 0, got[0].begin)
+	assert.Equal(t, 0, got[0].end)
+	assert.Equal(t, 0, got[1].begin)
+	assert.Equal(t, 6, got[1].end)
 }
 
 func TestText_binarySearch(t *testing.T) {

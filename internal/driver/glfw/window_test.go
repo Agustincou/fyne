@@ -422,7 +422,8 @@ func TestWindow_HandleDragging(t *testing.T) {
 
 		// drag start and drag event with pressed mouse button
 		w.mouseMoved(w.viewport, 8, 8)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(4, 4),
@@ -437,7 +438,8 @@ func TestWindow_HandleDragging(t *testing.T) {
 
 		// drag event going outside the widget's area
 		w.mouseMoved(w.viewport, 16, 8)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(12, 4),
@@ -452,7 +454,8 @@ func TestWindow_HandleDragging(t *testing.T) {
 
 		// drag event entering a _different_ widget's area still for the widget dragged initially
 		w.mouseMoved(w.viewport, 22, 6)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(18, 2),
@@ -483,7 +486,8 @@ func TestWindow_HandleDragging(t *testing.T) {
 		// drag event for other widget
 		w.mouseMoved(w.viewport, 26, 9)
 		assert.Nil(t, d1.popDragEvent())
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(8, 5),
@@ -510,7 +514,8 @@ func TestWindow_DragObjectThatMoves(t *testing.T) {
 		w.mouseMoved(w.viewport, 12, 12)
 		w.mouseClicked(w.viewport, glfw.MouseButton1, glfw.Press, 0)
 		w.mouseMoved(w.viewport, 10, 10)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(6, 6),
@@ -527,7 +532,8 @@ func TestWindow_DragObjectThatMoves(t *testing.T) {
 
 		// drag again -> position is relative to new element position
 		w.mouseMoved(w.viewport, 12, 12)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(9, 9),
@@ -559,14 +565,16 @@ func TestWindow_DragIntoNewObjectKeepingFocus(t *testing.T) {
 		w.mouseClicked(w.viewport, glfw.MouseButton1, glfw.Release, 0)
 
 		// we should only have 2 mouse events on d1
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&desktop.MouseEvent{
 				PointEvent: fyne.PointEvent{Position: fyne.NewPos(7, 7), AbsolutePosition: fyne.NewPos(11, 11)},
 				Button:     desktop.MouseButtonPrimary,
 			},
 			d1.popMouseEvent(),
 		)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&desktop.MouseEvent{
 				PointEvent: fyne.PointEvent{Position: fyne.NewPos(17, 7), AbsolutePosition: fyne.NewPos(21, 11)},
 				Button:     desktop.MouseButtonPrimary,
@@ -613,7 +621,8 @@ func TestWindow_HoverableOnDragging(t *testing.T) {
 
 	runOnMain(func() {
 		w.mouseMoved(w.viewport, 10, 10)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&desktop.MouseEvent{PointEvent: fyne.PointEvent{
 				Position:         fyne.NewPos(6, 6),
 				AbsolutePosition: fyne.NewPos(10, 10),
@@ -622,7 +631,8 @@ func TestWindow_HoverableOnDragging(t *testing.T) {
 		)
 		w.mouseClicked(w.viewport, glfw.MouseButton1, glfw.Press, 0)
 		w.mouseMoved(w.viewport, 12, 12)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(8, 8),
@@ -635,7 +645,8 @@ func TestWindow_HoverableOnDragging(t *testing.T) {
 
 		// drag event going outside the widget's area
 		w.mouseMoved(w.viewport, 20, 12)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(16, 8),
@@ -650,7 +661,8 @@ func TestWindow_HoverableOnDragging(t *testing.T) {
 
 		// drag event going inside the widget's area again
 		w.mouseMoved(w.viewport, 12, 12)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			&fyne.DragEvent{
 				PointEvent: fyne.PointEvent{
 					Position:         fyne.NewPos(8, 8),

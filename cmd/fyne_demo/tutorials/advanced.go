@@ -77,7 +77,8 @@ func advancedScreen(win fyne.Window) fyne.CanvasObject {
 	labelBuildStatus := widget.NewLabel(buildStatus)
 
 	return container.NewHBox(
-		container.NewVBox(screen,
+		container.NewVBox(
+			screen,
 			widget.NewButton("Custom Theme", func() {
 				fyne.CurrentApp().Settings().SetTheme(newCustomTheme())
 			}),
@@ -85,7 +86,8 @@ func advancedScreen(win fyne.Window) fyne.CanvasObject {
 				win.SetFullScreen(!win.FullScreen())
 			}),
 		),
-		container.NewBorder(label, labelBuildStatus, nil, nil,
+		container.NewBorder(
+			label, labelBuildStatus, nil, nil,
 			container.NewGridWithColumns(2, genericCard, deskCard),
 		),
 	)

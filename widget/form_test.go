@@ -156,7 +156,8 @@ func TestForm_Disabled(t *testing.T) {
 	disabled.Disable()
 	f := NewForm(
 		NewFormItem("Form Item 1", NewEntry()),
-		NewFormItem("Form Item 2", disabled))
+		NewFormItem("Form Item 2", disabled),
+	)
 
 	w := test.NewWindow(f)
 	defer w.Close()
