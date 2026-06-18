@@ -88,6 +88,16 @@ func (d *gLDriver) drawSingleFrame() {
 			continue
 		}
 
+		// Skip repaint for unfocused windows to avoid blocking the
+		// event loop. Some Linux compositors (e.g. Mutter/GNOME)
+		// throttle MakeContextCurrent on background windows, which
+		// would stall all other windows. Unfocused windows are
+		// re-marked dirty and repainted when they receive focus.
+		if w != curWindow {
+			w.canvas.SetDirty()
+			continue
+		}
+
 		w.RunWithContext(func() {
 			if w.driver.repaintWindow(w) {
 				refreshed = true
