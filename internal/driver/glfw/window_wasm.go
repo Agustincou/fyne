@@ -156,14 +156,18 @@ func (w *window) moved(_ *glfw.Window, x, y int) {
 }
 
 func (w *window) resized(_ *glfw.Window, width, height int) {
-	runOnMain(func() {
+	// Same reasoning as mouseScrolled below: glfw-js fires this with `go
+	// w.sizeCallback(...)` per event, and window resize can fire in a
+	// rapid burst while the user drags an edge — queued instead of
+	// blocking that fresh goroutine on runOnMain.
+	queueMainThreadWork(func() {
 		w.canvas.scale = w.calculatedScale()
 		w.processResized(width, height)
 	})
 }
 
 func (w *window) frameSized(_ *glfw.Window, width, height int) {
-	runOnMain(func() {
+	queueMainThreadWork(func() {
 		w.processFrameSized(width, height)
 	})
 }
@@ -214,13 +218,16 @@ func (w *window) setCustomCursor(rawCursor *Cursor, isCustomCursor bool) {
 }
 
 func (w *window) mouseMoved(_ *glfw.Window, xpos, ypos float64) {
-	runOnMain(func() {
+	// Highest-frequency of this whole family — glfw-js fires
+	// `go w.cursorPosCallback(...)` on every mousemove event, easily
+	// dozens per second. Same reasoning as mouseScrolled below.
+	queueMainThreadWork(func() {
 		w.processMouseMoved(w.scaleInput(xpos), w.scaleInput(ypos))
 	})
 }
 
 func (w *window) mouseClicked(viewport *glfw.Window, btn glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-	runOnMain(func() {
+	queueMainThreadWork(func() {
 		button, modifiers := convertMouseButton(btn, mods)
 		mouseAction := convertAction(action)
 
@@ -229,7 +236,16 @@ func (w *window) mouseClicked(viewport *glfw.Window, btn glfw.MouseButton, actio
 }
 
 func (w *window) mouseScrolled(viewport *glfw.Window, xoff, yoff float64) {
-	runOnMain(func() {
+	// glfw-js fires this with `go w.scrollCallback(...)` per wheel tick —
+	// a fast scroll gesture can produce far more of these than one frame
+	// can process. runOnMain used to block this fresh goroutine until the
+	// main loop got around to it; under a fast gesture that piles up
+	// blocked goroutines faster than drawSingleFrame/eventTick can drain
+	// them, which presents as the same freeze as the keyboard bug even
+	// without a strict deadlock. queueMainThreadWork (device_wasm.go)
+	// never blocks the caller and drops events past its buffer instead of
+	// piling up — the same tradeoff already applied to keyboard input.
+	queueMainThreadWork(func() {
 		if xoff == 0 &&
 			(viewport.GetKey(glfw.KeyLeftShift) == glfw.Press ||
 				viewport.GetKey(glfw.KeyRightShift) == glfw.Press) {
@@ -463,7 +479,15 @@ func (w *window) keyPressed(viewport *glfw.Window, key glfw.Key, scancode int, a
 	keyAction := convertAction(action)
 	keyASCII := convertASCII(key)
 
-	w.processKeyPressed(keyName, keyASCII, scancode, keyAction, keyDesktopModifier)
+	// glfw-js invokes this callback with `go w.keyCallback(...)` for every
+	// keydown — a fresh goroutine each time, not Fyne's main goroutine.
+	// Calling processKeyPressed (which touches the focused widget) directly
+	// from there races with itself under fast typing and can hang the app.
+	// queueMainThreadWork (device_wasm.go) serializes every keyboard-driven
+	// call into Fyne through a single dedicated goroutine.
+	queueMainThreadWork(func() {
+		w.processKeyPressed(keyName, keyASCII, scancode, keyAction, keyDesktopModifier)
+	})
 }
 
 func desktopModifier(mods glfw.ModifierKey) fyne.KeyModifier {
@@ -487,8 +511,14 @@ func desktopModifier(mods glfw.ModifierKey) fyne.KeyModifier {
 // Unicode character is input regardless of what modifier keys are used.
 //
 // Characters do not map 1:1 to physical keys, as a key may produce zero, one or more characters.
+//
+// Same reasoning as keyPressed above: glfw-js fires this from a fresh
+// goroutine per keystroke, so the actual dispatch is queued instead of
+// called inline.
 func (w *window) charInput(viewport *glfw.Window, char rune) {
-	w.processCharInput(char)
+	queueMainThreadWork(func() {
+		w.processCharInput(char)
+	})
 }
 
 func (w *window) focused(_ *glfw.Window, focused bool) {
@@ -594,6 +624,22 @@ type wrapInner struct {
 
 	centered bool
 	onClosed func()
+
+	// content, title and fullscreen are tracked here because wrapInner
+	// embeds fyne.Window set to root (the first real window on the page,
+	// see wrapInnerWindow below) and container.InnerWindow exposes no
+	// getter for any of them — without overriding both the getter and
+	// setter for each, calls fall through to the embedded root, acting on
+	// whatever window happens to sit underneath instead of this one.
+	// SetTitle/Title has real callers today (add-edit-sale-v2.go and
+	// friends set the cart window's title expecting it to rename the
+	// InnerWindow's own title bar, not the page/root window). SetFullScreen
+	// is the same shape even though InnerWindow has no real fullscreen
+	// concept of its own — tracking it locally at least keeps get/set
+	// self-consistent instead of toggling the root window's state.
+	content    fyne.CanvasObject
+	title      string
+	fullScreen bool
 }
 
 func wrapInnerWindow(w *container.InnerWindow, root fyne.Window, d *gLDriver) fyne.Window {
@@ -626,8 +672,30 @@ func (w *wrapInner) Resize(s fyne.Size) {
 	w.inner.Resize(s)
 }
 
+func (w *wrapInner) Content() fyne.CanvasObject {
+	return w.content
+}
+
 func (w *wrapInner) SetContent(o fyne.CanvasObject) {
+	w.content = o
 	w.inner.SetContent(o)
+}
+
+func (w *wrapInner) Title() string {
+	return w.title
+}
+
+func (w *wrapInner) SetTitle(title string) {
+	w.title = title
+	w.inner.SetTitle(title)
+}
+
+func (w *wrapInner) FullScreen() bool {
+	return w.fullScreen
+}
+
+func (w *wrapInner) SetFullScreen(full bool) {
+	w.fullScreen = full
 }
 
 func (w *wrapInner) SetOnClosed(fn func()) {
