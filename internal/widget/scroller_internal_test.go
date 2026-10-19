@@ -115,6 +115,27 @@ func TestScrollContainer_OnScrolled(t *testing.T) {
 	assert.False(t, scrolled) // don't repeat for no-change
 }
 
+func TestScrollContainer_OnScrolled_ResetWhenContentFits(t *testing.T) {
+	rect := canvas.NewRectangle(color.Black)
+	rect.SetMinSize(fyne.NewSize(100, 1000))
+	scroll := NewScroll(rect)
+	scroll.Resize(fyne.NewSize(100, 100))
+	scroll.ScrollToBottom()
+	require.NotEqual(t, float32(0), scroll.Offset.Y)
+
+	var notified *fyne.Position
+	scroll.OnScrolled = func(p fyne.Position) {
+		notified = &p
+	}
+
+	// Growing past the content resets the offset to 0; listeners that cache
+	// the offset (Table, List, ...) must hear about it or they stay stale.
+	scroll.Resize(fyne.NewSize(100, 1200))
+	assert.Equal(t, fyne.NewPos(0, 0), scroll.Offset)
+	require.NotNil(t, notified)
+	assert.Equal(t, fyne.NewPos(0, 0), *notified)
+}
+
 func TestScrollContainer_SetMinSize_Direction(t *testing.T) {
 	t.Run("Both", func(t *testing.T) {
 		rect := canvas.NewRectangle(color.Black)

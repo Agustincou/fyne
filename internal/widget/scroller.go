@@ -612,6 +612,12 @@ func (s *Scroll) updateOffset(deltaX, deltaY float32) bool {
 		if s.Offset.X != 0 || s.Offset.Y != 0 {
 			s.Offset.X = 0
 			s.Offset.Y = 0
+			// Notify like any other move: widgets that cache the offset
+			// (Table, List, GridWrap, Tree) otherwise keep the stale value
+			// and skip drawing the leading rows once the content fits.
+			if f := s.OnScrolled; f != nil {
+				f(s.Offset)
+			}
 			return true
 		}
 		return false
