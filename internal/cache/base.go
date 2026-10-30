@@ -2,6 +2,7 @@ package cache
 
 import (
 	"os"
+	"sync/atomic"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -118,5 +119,30 @@ func (c *expiringCache) isExpired(now time.Time) bool {
 
 // setAlive updates expiration time.
 func (c *expiringCache) setAlive() {
-	c.expires = timeNow().Add(ValidDuration)
+	c.expires = aliveNow().Add(ValidDuration)
+}
+
+// tickNanos is the time of the driver's last loop tick (see Tick), or 0 if the
+// driver does not tick.
+var tickNanos atomic.Int64
+
+// Tick records the current time for setAlive. Drivers call it on every loop
+// tick, so setAlive reads one clock per tick instead of one per object: a paint
+// walks every visible object and refreshes its cache entry, and on systems
+// where the clock is slow to read (e.g. Linux falling back to the HPET
+// clocksource after the TSC is marked unstable, ~3µs per time.Now) that alone
+// made each frame cost milliseconds. Expiry is measured in minutes, so a time
+// at most one tick old changes nothing.
+func Tick() {
+	tickNanos.Store(timeNow().UnixNano())
+}
+
+// aliveNow is the time setAlive uses: the last tick when the driver ticks, which
+// is at most one tick old, or the real time otherwise.
+func aliveNow() time.Time {
+	if nanos := tickNanos.Load(); nanos != 0 {
+		return time.Unix(0, nanos)
+	}
+
+	return timeNow()
 }

@@ -246,8 +246,26 @@ func (t *timeMock) setTime(min, sec int) {
 	}
 }
 
+func Test_expiringCache_setAliveUsesTheLastTick(t *testing.T) {
+	defer testClearAll()
+
+	tm := &timeMock{}
+	tm.setTime(10, 0)
+	Tick()
+	tm.setTime(10, 5) // the clock moves on, the tick does not
+
+	c := &expiringCache{}
+	c.setAlive()
+	assert.True(t, tm.createTime(10, 0).Add(ValidDuration).Equal(c.expires))
+
+	Tick()
+	c.setAlive()
+	assert.True(t, tm.createTime(10, 5).Add(ValidDuration).Equal(c.expires))
+}
+
 func testClearAll() {
 	skippedCleanWithCanvasRefresh = false
+	tickNanos.Store(0)
 	canvases.Clear()
 	svgs.Clear()
 	textTextures.Clear()

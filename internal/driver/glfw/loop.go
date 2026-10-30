@@ -163,6 +163,7 @@ func (d *gLDriver) runGL() {
 				f.done <- struct{}{}
 			}
 		case <-eventTick.C:
+			cache.Tick()
 			d.pollEvents()
 			for i := 0; i < len(d.windows); i++ {
 				w := d.windows[i].(*window)
