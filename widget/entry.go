@@ -145,6 +145,19 @@ func NewPasswordEntry() *Entry {
 	return e
 }
 
+// entryExtender is implemented by Entry and, through embedding, by every
+// widget that extends it. Code in this package that needs the Entry behind a
+// widget uses it instead of a type assertion to *Entry, which an extended
+// Entry does not pass.
+type entryExtender interface {
+	baseEntry() *Entry
+}
+
+// baseEntry returns the Entry itself; a widget that embeds *Entry inherits it.
+func (e *Entry) baseEntry() *Entry {
+	return e
+}
+
 // AcceptsTab returns if Entry accepts the Tab key or not.
 //
 // Since: 2.1

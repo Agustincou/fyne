@@ -314,7 +314,8 @@ func (f *Form) setUpValidation(widget fyne.CanvasObject, i int) {
 	}
 	if w, ok := widget.(fyne.Validatable); ok {
 		f.Items[i].invalid = w.Validate() != nil
-		if e, ok := w.(*Entry); ok {
+		if ext, ok := w.(entryExtender); ok {
+			e := ext.baseEntry()
 			e.onFocusChanged = func(bool) {
 				updateValidation(e.validationError)
 			}
@@ -357,7 +358,8 @@ func (f *Form) updateHelperText(item *FormItem) {
 		return // testing probably, either way not rendered yet
 	}
 	showHintIfError := false
-	if e, ok := item.Widget.(*Entry); ok {
+	if ext, ok := item.Widget.(entryExtender); ok {
+		e := ext.baseEntry()
 		if !e.dirty || (e.focused && !item.wasFocused) {
 			showHintIfError = true
 		}
