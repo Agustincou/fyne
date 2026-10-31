@@ -473,7 +473,8 @@ func (f *Form) updateHelperText(item *FormItem) {
 		return // testing probably, either way not rendered yet
 	}
 	showHintIfError := false
-	if e, ok := item.Widget.(*Entry); ok {
+	if ext, ok := item.Widget.(entryExtender); ok {
+		e := ext.baseEntry()
 		if !e.dirty || (e.focused && !item.wasFocused) {
 			showHintIfError = true
 		}

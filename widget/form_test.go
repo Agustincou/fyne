@@ -637,3 +637,39 @@ func TestForm_RefreshFromStructInit(t *testing.T) {
 		form.Refresh()
 	})
 }
+
+// An Entry extended through embedding (ExtendBaseWidget) must get the same
+// helper text timing as a plain Entry: the hint, not the error, while the
+// user types into the field for the first time. AlwaysShowValidationError
+// makes the Entry report the error while focused, so the timing depends on
+// Form recognising the Entry behind the extended widget.
+func TestForm_ExtendedEntryValidation_FirstTypeShowsHint(t *testing.T) {
+	test.NewTempApp(t)
+
+	type extendedEntry struct {
+		*Entry
+	}
+
+	ext := &extendedEntry{Entry: &Entry{}}
+	ext.ExtendBaseWidget(ext)
+	ext.AlwaysShowValidationError = true
+	ext.Validator = func(s string) error {
+		if s != "123" {
+			return errors.New("invalid")
+		}
+		return nil
+	}
+
+	item := &FormItem{Text: "Field", Widget: ext, HintText: "hint"}
+	form := &Form{Items: []*FormItem{item}}
+	w := test.NewTempWindow(t, form)
+
+	w.Canvas().Focus(ext)
+	test.Type(ext, "1")
+
+	assert.Equal(t, "hint", item.helperOutput.Text)
+
+	w.Canvas().Unfocus()
+
+	assert.Equal(t, "invalid", item.helperOutput.Text)
+}
