@@ -21,11 +21,23 @@ type FormDialog struct {
 //
 // Since: 2.4
 func (d *FormDialog) Submit() {
-	if d.confirm.Disabled() {
+	if d.confirm.Disabled() || !d.itemsValid() {
 		return
 	}
 
 	d.hideWithResponse(true, false)
+}
+
+// itemsValid checks the items again on submit: the confirm button may still be enabled
+// while the focused field is invalid, as an Entry reports its error when it loses focus.
+func (d *FormDialog) itemsValid() bool {
+	for _, item := range d.items {
+		if v, ok := item.Widget.(fyne.Validatable); ok && v.Validate() != nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 // setSubmitState is intended to run when the form validation changes to

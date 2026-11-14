@@ -35,6 +35,9 @@ func NewFormItem(text string, widget fyne.CanvasObject) *FormItem {
 
 var _ fyne.Validatable = (*Form)(nil)
 
+// errFormItemInvalid is reported for an invalid item whose widget has not reported an error yet.
+var errFormItemInvalid = errors.New("form item is invalid")
+
 // Form widget is two column grid where each row has a label and a widget (usually an input).
 // The last row of the grid will contain the appropriate form control buttons if any should be shown.
 // Setting OnSubmit will set the submit button to be visible and call back the function when tapped.
@@ -454,6 +457,11 @@ func (f *Form) setValidationError(err error) {
 		for _, item := range f.Items {
 			if item.invalid {
 				err = item.validationError
+				if err == nil {
+					// The item was found invalid before its widget reported an error
+					// (e.g. an untouched Entry): the form is still not valid.
+					err = errFormItemInvalid
+				}
 				break
 			}
 		}

@@ -61,6 +61,35 @@ func TestFormDialog_ValidCanSubmit(t *testing.T) {
 	}
 }
 
+// An item that was invalid from the start and never touched must keep the form
+// invalid when another item reports it is valid.
+func TestFormDialog_UntouchedInvalidItemKeepsSubmitDisabled(t *testing.T) {
+	var result formDialogResult
+	fd := validatingFormDialog(&result, test.NewTempWindow(t, nil))
+	fd.Show()
+
+	fd.items[1].Widget.(*widget.Entry).SetText("anything")
+
+	assert.True(t, fd.confirm.Disabled(), "the untouched first item is still invalid")
+}
+
+// Submit must not confirm while the focused field is invalid, even though the
+// field only reports its error to the form when it loses focus.
+func TestFormDialog_SubmitChecksTheFocusedField(t *testing.T) {
+	var result formDialogResult
+	parent := test.NewTempWindow(t, nil)
+	fd := validatingFormDialog(&result, parent)
+	fd.Show()
+
+	entry := fd.items[0].Widget.(*widget.Entry)
+	entry.SetText("abc")
+	parent.Canvas().Focus(entry)
+	entry.SetText("ab")
+	fd.Submit()
+
+	assert.Equal(t, formDialogNoAction, result, "an invalid form must not be submitted")
+}
+
 func TestFormDialog_CanCancelInvalid(t *testing.T) {
 	var result formDialogResult
 	fd := validatingFormDialog(&result, test.NewTempWindow(t, nil))
