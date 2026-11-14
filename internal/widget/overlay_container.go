@@ -47,6 +47,13 @@ func (o *OverlayContainer) Refresh() {
 	o.Base.Refresh()
 }
 
+// OverlayContent returns the object this container shows as an overlay,
+// e.g. the PopUp that added it. Canvas.Overlays() lists the containers, whose
+// type is internal, so this is how an app tells its own overlays apart.
+func (o *OverlayContainer) OverlayContent() fyne.CanvasObject {
+	return o.Content
+}
+
 // Hide hides the overlay container.
 func (o *OverlayContainer) Hide() {
 	if o.shown {

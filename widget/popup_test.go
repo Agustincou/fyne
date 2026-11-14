@@ -344,6 +344,18 @@ func TestPopUp_HideOnly_Stacked(t *testing.T) {
 	assert.Equal(t, []fyne.CanvasObject{pop2, pop3, pop1}, contents())
 }
 
+// An app only sees the overlay stack through fyne.Canvas, which lists the
+// internal containers: OverlayContent is how it gets its own pop-up back.
+func TestPopUp_OverlayContent(t *testing.T) {
+	c := test.NewCanvas()
+	pop := NewPopUp(NewLabel("Hi"), c)
+	pop.Show()
+
+	top, ok := c.Overlays().Top().(interface{ OverlayContent() fyne.CanvasObject })
+	require.True(t, ok)
+	assert.Equal(t, pop, top.OverlayContent())
+}
+
 func TestPopUp_Layout(t *testing.T) {
 	win := test.NewWindow(NewLabel("OK"))
 	defer win.Close()
