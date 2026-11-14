@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/widget"
@@ -185,8 +186,56 @@ func TestEntry_AlwaysShowValidationError_WithoutValidator_Success(t *testing.T) 
 	entry := widget.NewEntry()
 	entry.AlwaysShowValidationError = true
 
+	// A manual error holds until it is cleared: it is not dropped on the first render.
 	entry.SetValidationError(errors.New("error"))
+	entry.SetValidationError(nil)
 
 	w := test.NewTempWindow(t, entry)
 	test.AssertRendersToMarkup(t, "entry/always_on_without_validator_success.xml", w.Canvas())
+}
+
+// An error set with SetValidationError holds until the next input change: not
+// lost on the first render, on an untouched Entry or on focus loss.
+func TestEntry_SetValidationError_HoldsUntilInputChange(t *testing.T) {
+	test.NewTempApp(t)
+	errSet := errors.New("set invalid")
+	notEmpty := func(s string) error {
+		if s == "" {
+			return errors.New("empty")
+		}
+		return nil
+	}
+
+	watch := func(e *widget.Entry) (fyne.Window, *error) {
+		var last error
+		w := test.NewTempWindow(t, e)
+		e.SetOnValidationChanged(func(err error) { last = err })
+		return w, &last
+	}
+
+	noValidator := widget.NewEntry()
+	_, last := watch(noValidator)
+	noValidator.AlwaysShowValidationError = true
+	noValidator.SetValidationError(errSet)
+	assert.Equal(t, errSet, *last, "first render of an Entry without Validator")
+
+	untouched := &widget.Entry{Validator: notEmpty}
+	_, last = watch(untouched)
+	untouched.SetValidationError(errSet)
+	assert.Equal(t, errSet, *last, "untouched empty Entry")
+
+	focused := &widget.Entry{Validator: notEmpty}
+	w, last := watch(focused)
+	focused.SetText("ok")
+	focused.SetValidationError(errSet)
+	w.Canvas().Focus(focused)
+	w.Canvas().Unfocus()
+	assert.Equal(t, errSet, *last, "focus loss")
+
+	test.Type(focused, "k")
+	assert.NoError(t, *last, "typing is an input change")
+
+	focused.SetValidationError(errSet)
+	focused.Undo()
+	assert.NoError(t, *last, "undo is an input change")
 }

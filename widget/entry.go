@@ -68,6 +68,9 @@ type Entry struct {
 	onValidationChanged func(error)
 	validationError     error
 	onRequiredChanged   func(bool)
+	// manualValidationError is set while the current error comes from
+	// SetValidationError, which holds until the next input change.
+	manualValidationError bool
 
 	// If true, the Validator runs automatically on render without user interaction.
 	// It will reflect any validation errors found or those explicitly set via SetValidationError().
@@ -333,7 +336,7 @@ func (e *Entry) FocusLost() {
 		e.selectKeyDown = false
 	})
 	if e.Validator != nil {
-		e.validate()
+		e.revalidate()
 		e.Refresh()
 	}
 	if e.onFocusChanged != nil {
@@ -457,6 +460,7 @@ func (e *Entry) Redo() {
 	e.updateText(newText, false)
 	e.CursorRow, e.CursorColumn = e.rowColFromTextPos(pos)
 	e.syncSelectable()
+	e.validate() // an input change: it also ends an error set with SetValidationError
 	if e.OnChanged != nil {
 		e.OnChanged(newText)
 	}
@@ -757,6 +761,7 @@ func (e *Entry) Undo() {
 	e.updateText(newText, false)
 	e.CursorRow, e.CursorColumn = e.rowColFromTextPos(pos)
 	e.syncSelectable()
+	e.validate() // an input change: it also ends an error set with SetValidationError
 	if e.OnChanged != nil {
 		e.OnChanged(newText)
 	}
@@ -1766,7 +1771,7 @@ func (r *entryRenderer) ensureValidationSetup() {
 		r.objects = append(r.objects, r.entry.validationStatus)
 		r.Layout(r.entry.Size())
 
-		r.entry.validate()
+		r.entry.revalidate()
 		r.Refresh()
 	}
 }

@@ -32,18 +32,33 @@ func (e *Entry) Validate() (err error) {
 		err = e.Validator(e.Text)
 	}
 
-	e.SetValidationError(err)
+	e.manualValidationError = false
+	if e.setValidationError(err) {
+		e.Refresh()
+	}
 	return err
 }
 
 // validate works like Validate but only updates the internal state and does not refresh.
+// It runs on input changes, which end an error set with SetValidationError.
 func (e *Entry) validate() {
 	var err error
 
 	if e.Validator != nil {
 		err = e.Validator(e.Text)
 	}
+	e.manualValidationError = false
 	e.setValidationError(err)
+}
+
+// revalidate is validate for events that are not input changes (focus loss, first render):
+// an error set with SetValidationError holds until the next input change.
+func (e *Entry) revalidate() {
+	if e.manualValidationError {
+		return
+	}
+
+	e.validate()
 }
 
 // SetOnValidationChanged is intended for parent widgets or containers to hook into the validation.
@@ -59,9 +74,14 @@ func (e *Entry) SetOnValidationChanged(callback func(error)) {
 }
 
 // SetValidationError manually updates the validation status until the next input change.
+//
+// Unlike the automatic validation, a manual error is kept even while the Entry is focused or
+// before the user has interacted with it: whether it is shown is still decided when rendering.
 func (e *Entry) SetValidationError(err error) {
-	if !e.setValidationError(err) {
-		return
+	e.manualValidationError = err != nil
+	e.validationError = err
+	if e.onValidationChanged != nil {
+		e.onValidationChanged(err)
 	}
 
 	e.Refresh()
