@@ -783,7 +783,9 @@ func (w *window) RescaleContext() {
 	}
 	w.fitContent()
 
-	if w.fullScreen {
+	// A maximized window keeps its size like a full screen one: the window manager ignores a new
+	// size, so no resize event would follow and the canvas would stay laid out for the old scale.
+	if w.fullScreen || w.viewport.GetAttrib(glfw.Maximized) == glfw.True {
 		w.width, w.height = w.viewport.GetSize()
 		scaledFull := fyne.NewSize(
 			scale.ToFyneCoordinate(w.canvas, w.width),
