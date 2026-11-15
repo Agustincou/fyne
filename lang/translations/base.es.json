@@ -1,4 +1,5 @@
 {
+    "(Select one)": "(Seleccione una opción)",
     "Advanced": "Avanzado",
     "Cancel": "Cancelar",
     "Confirm": "Confirmar",
@@ -21,7 +22,7 @@
     "Select all": "Seleccionar todo",
     "Show Hidden Files": "Mostrar archivos ocultos",
     "Undo": "Deshacer",
-    "Yes": "Si",
+    "Yes": "Sí",
     "file.name": {
         "other": "Nombre"
     },
