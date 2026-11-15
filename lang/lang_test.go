@@ -91,3 +91,20 @@ func TestLoadBuiltInTranslations(t *testing.T) {
 	setupLang("en")
 	assert.Equal(t, "OK", X("OK", "FAIL"))
 }
+
+func TestSetPreferredLocale(t *testing.T) {
+	t.Setenv("LANGUAGE", "")
+	t.Setenv("LC_ALL", "")
+	t.Setenv("LC_MESSAGES", "")
+	t.Setenv("LANG", "en_US.UTF-8")
+	t.Cleanup(func() { SetPreferredLocale("") })
+
+	SetPreferredLocale("es")
+	assert.Equal(t, "Sí", L("Yes"), "the preferred locale replaces the system one")
+	assert.Equal(t, "(Seleccione una opción)", L("(Select one)"))
+
+	SetPreferredLocale("")
+	if locale := SystemLocale(); locale.LanguageString() == "en" {
+		assert.Equal(t, "Yes", L("Yes"), "an empty locale goes back to the system one")
+	}
+}

@@ -69,6 +69,9 @@ var (
 	//go:embed translations
 	translations embed.FS
 	translated   []language.Tag
+
+	// preferredLocale, set with SetPreferredLocale, is used instead of the system locales.
+	preferredLocale fyne.Locale
 )
 
 // Localize asks the translation engine to translate a string, this behaves like the gettext "_" function.
@@ -232,9 +235,23 @@ func setupLang(lang string) {
 	localizer = i18n.NewLocalizer(bundle, lang)
 }
 
+// SetPreferredLocale sets the locale to translate to instead of the one of the system, for an app
+// that uses a single language whatever the system is set to. An empty locale goes back to the
+// system locales. The closest translation is used, as for the system locale.
+// It should be called before any window is shown.
+func SetPreferredLocale(l fyne.Locale) {
+	preferredLocale = l
+	updateLocalizer()
+}
+
 // updateLocalizer Finds the closest translation from the user's locale list and sets it up
 func updateLocalizer() {
 	setupOnce.Do(initRuntime)
+
+	if preferredLocale != "" {
+		setupLang(closestSupportedLocale([]string{preferredLocale.String()}).LanguageString())
+		return
+	}
 
 	all, err := locale.GetLocales()
 	if err != nil {
