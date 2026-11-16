@@ -224,7 +224,16 @@ func (w *window) RequestFocus() {
 		return
 	}
 
-	w.runOnMainWhenCreated(w.viewport.Focus)
+	w.runOnMainWhenCreated(func() {
+		// glfwFocusWindow does not restore a minimized window on Windows (it
+		// only activates it, leaving it in the taskbar). On X11 the window
+		// manager de-iconifies on activation, so restoring first is harmless
+		// there and makes the behavior consistent across platforms.
+		if w.viewport.GetAttrib(glfw.Iconified) == glfw.True {
+			w.viewport.Restore()
+		}
+		w.viewport.Focus()
+	})
 }
 
 func (w *window) SetIcon(icon fyne.Resource) {
